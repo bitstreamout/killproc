@@ -1,0 +1,47 @@
+.\"
+.\" Copyright 2008 Werner Fink, 2008 SUSE LINUX Products GmbH, Germany.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.TH VHANGUP 8 "Jan 31, 2008" "Version 1.16" "The SuSE boot concept"
+.UC 8
+.SH NAME
+Vhangup \- Cause a virtually hangup on the specified terminals
+.\"
+.SH SYNOPSIS
+.\"
+.B vhangup
+[\fI/dev/<terminal>\fR [\fI/dev/<terminal>\fR]]
+.\"
+.SH DESCRIPTION
+.B vhangup
+simulates a hangup on the specified terminals.  Not existing
+device files or devices will be ignored.
+.\"
+.SH EXAMPLES
+.nf
+.B vhangup /dev/tty1 /dev/tty2 /dev/tty3 /dev/tty4 /dev/tty5 /dev/tty6 /dev/ttyS1
+
+.fi
+This will replace all open file descriptors in the kernel that points
+to the listed ttys by a dummy that will deny further reading/writing
+to the device. It also send the signals SIGHUP/SIGCONT to the processes
+which have file descriptors open on the listed ttys.
+.\"
+.SH RETURN VALUE
+On success, zero is returned.  On error, 1 is returned.
+.\"
+.SH SEE ALSO
+.BR vhangup (2),
+.BR tty (4),
+.BR ttyS (4),
+.BR pts (4).
+.\"
+.SH COPYRIGHT
+2008 Werner Fink,
+2008 SUSE LINUX Products GmbH, Germany.
+.SH AUTHOR
+Werner Fink <werner@suse.de>

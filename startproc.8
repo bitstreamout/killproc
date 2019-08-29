@@ -1,0 +1,383 @@
+.\"
+.\" Copyright (c) 1994-2007 Werner Fink, 1996-2000 SuSE GmbH, Nuernberg, Germany.
+.\" Copyright (c) 2007 SuSE LINUX Products GmbH, Nuernberg, Germany.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.TH STARTPROC 8 "Nov 30, 2007" "Version 1.16" "The SuSE boot concept"
+.UC 8
+.SH NAME
+Startproc \- Start processes identified by path name
+.br
+Start_daemon \- Start processes identified by path name
+.SH SYNOPSIS
+.\"
+.HP
+.B startproc
+.RB [ \-fLves ]
+.RB [ \-x ]
+.RB [[ \-n\  ] \fI\-<prio>\fP ]
+.RB [ \-o\ c\fI<class>\fP,n\fI<data>\fP ]
+.RB [ \- ( t | T )\  \fI<sec>\fP ]
+.RB [ \-u\ \fIuser\fP ]
+.RB [ \-g\ \fIgroup\fP ]
+.RB [ \-l\ \fIlog_file\fP | \-q | \-d ]
+.RB [ \-p\ \fIpid_file\fP ]
+.RB [ \-i\ \fIignore_file\fP ]
+.RB [ \-c\ \fIroot\fP ]
+.RB [ \- ( w | W\  \fI<file\ list>\fP \fR)]
+.IR  /path/to/executable " [" "arguments for executable" ]
+.\"
+.HP
+.B start_daemon
+.RB [ \-fLve ]
+.RB [ \-x ]
+.RB [ \-n\ \fI+/\-<prio>\fP ]
+.RB [ \-o\ c\fI<class>\fP,n\fI<data>\fP ]
+.RB [ \-u\ \fIuser\fP ]
+.RB [ \-g\ \fIgroup\fP ]
+.RB [ \-l\ \fIlog_file\fP | \-q | \-d ]
+.RB [ \-p\ \fIpid_file\fP ]
+.RB [ \-i\ \fIignore_file\fP ]
+.RB [ \-c\ \fIroot\fP ]
+.IR  /path/to/executable " [" "arguments for executable" ]
+.SH SYNOPSIS LSB 3\.1
+.HP
+.B start_daemon
+.RB [ \-f ]
+.RB [ \-n\ \fI+/\-<prio>\fP ]
+.IR  /path/to/executable " [" "arguments for executable" ]
+.\"
+.SH DESCRIPTION
+.B startproc
+and the LSB variant
+.B start_daemon
+check for all processes of the specified executable and
+starts it if
+.B no
+processes are found. Note that
+.B startproc
+is designed to start a daemon but not a kernel thread or
+a program which enables a kernel thread.
+.PP
+Without any option
+.B startproc
+does search for a process by using the full
+path of the corresponding program and a default pid file
+.RB (/var/run/ <basename> .pid)
+which are used together to identify the executable
+out from the
+.I /proc
+file system
+.RB (see " proc" (5)).
+Only if the inode number
+.RB (/proc/ <pid> /exe)
+and the full name are unavailable
+.RB (/proc/ <pid> /cmdline)
+or if the executable changes its zeroth argument,
+.B startproc
+uses the base name
+.RB (/proc/ <pid> /stat)
+to identify the running program.
+.PP
+Extended functionality is provided by the
+.B \-p
+option (former option
+.B \-f
+changed due to the LSB specification).
+If this option is specified,
+.B startproc
+tries to check against the pid read from this file
+instead of the default pid file
+.RB (/var/run/ <basename> .pid).
+The pid read from this file is compared against the pids of possible
+running processes that use the specified executable. In order to avoid
+confusion with stale pid files, a not up-to-date pid will be ignored.
+.PP
+For the possibility of having two different sessions of one binary
+program, the option
+.B \-i
+.IR ignore_file
+allows to specify a pid file which pid number is used to
+.B ignore
+all processes of corresponding process
+.BR session .
+.PP
+The option
+.B \-v
+makes
+.B startproc
+print out verbose diagnostics.
+.PP
+The
+.B start_daemon
+does not support the options
+.BR \- ( t | T )\  \fI<sec>\fP
+nor
+.BR \- ( w | W\  \fI<file\ list>\fP )
+for waiting for success and
+the option
+.B \-s
+for a new session as this variant does not fork to start the
+executable.
+.\"
+.SH REQUIRED
+.TP
+.I /path/to/executable
+Specifies the executable by its full path name. This argument is
+always required. Everything that follows this path is considered
+options for the executable to be launched. Further information can be
+obtained from the respective manpage(s).
+.SH OPTIONS
+.TP
+.RB [ "-n " ] \fI+/-<prio>\fP
+Set the nice level for the process. If used, this option should
+always be the first in the command line.  The nice level
+.I <prio>
+may be specified in the range between \-20 and +20.
+Only root is allowed to set negative nice values.
+.TP
+.B \-o\ c\fI<class>\fP,n\fI<data>\fP
+Set the io scheduling class and priority. If used, this option requires
+the class identifier \fBc\fP and the class number to use:  \fB0\fP for none,
+\fB1\fP for realtime, \fB2\fP for best-effort, \fB3\fP for idle. The
+scheduling class data can be appended with the identifier \fBn\fP.
+This only has an effect if the choosen class accepts an argument.
+For the classes realtime and best-effort, \fB0\fP upto \fB7\fP
+are valid data numbers, with lower number being higher priority.
+.TP
+.B \-e
+Bequeath only a minimal set of environment variables to the new process:
+.BR HOME ", " PATH ", " SHELL ", " LISTEN_PID ", " LISTEN_FDS ", " RUNLEVEL ", and " PREVLEVEL .
+.TP
+.BI \-p " pid_file"
+(Former option
+.B \-f
+changed due to the LSB specification.)
+Use an alternate pid file instead of the default
+.RB (/var/run/ <basename> .pid).
+The pid read from this file is being matched against the pid
+of running processes that have an executable with specified path.
+In order to avoid confusion with stale pid files, a
+not up-to-date pid will be ignored.
+Obviously this option does not work if option
+.B \-f
+is specified.
+.TP
+.BI \-i " ignore_file"
+The pid found in this file is used as
+.B session
+id of the same binary program which should be ignored by
+.BR startproc .
+Obviously this option does not work if option
+.B \-f
+is specified.
+.TP
+.B \-f
+This option is required by the Linux Standard Base Specification (LSB).
+With this option the start of a process is forced.
+.TP
+.BI \-g " group"
+Sets the group ID of the process to
+.IR gid .
+.TP
+.BI \-l " log_file"
+Redirect the process standard output and standard error to the file
+.IR log_file .
+.TP
+.B \-L
+This option causes symlinks to be followed, as the
+like-named option in
+.BR ls (1).
+BR Note :
+for the file name the original name of the program is used 
+instead of the name of the symbolic link.
+.TP
+.BI \-c " root"
+Change root directory to
+.IR root .
+Services which have been started with this option can only
+be checked by
+.BR checkproc (8)
+and signaled by
+.BR killproc (8)
+if
+.BR checkproc (8)
+and
+.BR killproc (8)
+are called with the same option argument for the option
+.BR \-c .
+.TP
+.B \-q
+Equals to \-l /dev/null (supresses output).
+.TP
+.B \-d
+Let startproc expect that the started service will do
+a dialog by prompting for, e.g. a passphrase.
+This option implies a timeout of 15 seconds (\-t 15).
+.TP
+.B \-s
+Starts the process in a new session. The new task is a process group
+leader and has no controlling tty.
+.TP
+.BI \-t " <sec>"
+The number of seconds to wait after the successful start of a
+service.  This options accepts the number of seconds to wait.
+You can specify some units after a given number:
+.B s
+for seconds,
+.B m
+for minutes, and
+.B h
+for hours to wait.
+.TP
+.BI \-T " <sec>"
+The same as for option
+.B \-t
+but wait only on the started process not on childs forked by
+the process.
+.TP
+.B \-w
+Wait the first started process to terminate before returning.
+If the parent process of the daemon does not finish also
+.BR startproc (8)
+does
+.B not
+finish.
+.TP
+.BI \-W " <file list>"
+Wait on the provided file or list of files separated with colons.
+If the files will not be created
+.BR startproc (8)
+does
+.B not
+finish.
+.TP
+.BI \-u " user"
+Sets the user ID of the process to
+.IR user .
+.TP
+.B \-v
+Verbose output.
+.TP
+.B \-x
+Tells
+.B startproc
+as well as
+.B start_daemon
+to use the upto 15 byte long filename name found in
+.I /proc/<pid>/stat
+to be able to identify scripts overwriting their command line.
+.\"
+.SH EXAMPLE
+.TP
+.B startproc /usr/sbin/sendmail
+.IP
+starts
+.I /usr/sbin/sendmail
+if no sendmail process is found. If a pid file
+.I  sendmail.pid
+exists in
+.IR /var/run/ ,
+then the pid found in this file is used to search the process table
+for a process with an executable that matches the specified pathname,
+.IR /usr/sbin/sendmail .
+If no matching process is found,
+.I /usr/sbin/sendmail
+is launched.
+.TP
+.B startproc \-p /var/myrun/lpd.pid /usr/sbin/lpd
+.IP
+starts
+.I /usr/sbin/lpd
+if there is no process with the pid found in
+.I /var/myrun/lpd.pid
+.B and
+no process in the actual process table exists
+that uses the specified binary.
+.\"
+.SH EXIT CODES
+The exit codes have the following
+.B LSB
+conform conditions:
+.PP
+.RS 7
+.IP 0 5
+Success
+.IP 1 5
+Generic or unspecified error
+.IP 2 5
+Invalid or excess argument(s)
+.IP 4 5
+Insufficient privilege(s)
+.IP 5 5
+Program is not installed
+.IP 7 5
+Program is not running
+.RE
+.PP
+In some error cases, diagnostic output is sent to standard error, or,
+if standard error is not available,
+.BR syslogd "(8) is being used".
+.SH NOTE
+.B startproc
+is a replacement for the Bourne shell function
+.B daemon
+found in the widely used SysVinit package of
+Miquel van Smoorenburg, <miquels@cistron.nl>.
+.B startproc
+is not useful to start kernel threads. This should be done by service
+utilities designed for the purpose to accomplish this task.
+.\"
+.SH BUGS
+Identifying a process based on the executable file and the corresponding
+inode number only works if the process stays alive during startproc's
+execution. Processes rewriting their zeroth argument or shell scripts (the
+inode number of the shell executable file is not identical to that of
+the script file) may not be identified by a filename path.
+.PP
+.B Startproc
+does not start a process if there already exists one being in the zombie
+state.  Zombies are processes which arn't alive but listed in the process
+table to have the exit status ready for the corresponding parent processes.
+Therefore the parent processes should be check out.
+.PP
+.B Start_daemon
+is not able to check for exit status of an executable daemon because after
+the final
+.BR execve (3)
+the
+.B start_daemon
+as an own process does not exit anymore.
+.\"
+.SH FILES
+.TP
+.I /proc/
+path to the proc file system
+.RB (see " proc" (5)).
+.TP
+.I /etc/init.d/
+path to the SuSE boot concept script base directory
+as required by the Linux Standard  Base  Specification (LSB)
+.RB (see " init.d" (7)).
+.\"
+.SH SEE ALSO
+.BR checkproc (8),
+.BR killproc (8),
+.BR insserv (8),
+.BR init.d (7),
+.BR kill (1),
+.BR skill (1),
+.BR killall (8),
+.BR killall5 (8),
+.BR signal (7),
+.BR proc (5).
+.SH COPYRIGHT
+1994-2007 Werner Fink,
+1996-2000 SuSE GmbH Nuernberg, Germany.
+2007 SuSE LINUX Products GmbH, Nuernberg, Germany.
+.SH AUTHOR
+Werner Fink <werner@suse.de>

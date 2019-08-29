@@ -1,0 +1,62 @@
+.\"
+.\" Copyright 2011 Werner Fink, 2008 SUSE LINUX Products GmbH, Germany.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.TH RVMTAB 8 "Feb 01, 2011" "Version 0.1" "The SuSE boot concept"
+.UC 8
+.SH RVMTAB
+Rvmtab \- Sort \fI/proc/mounts\fR in the order of \fI/proc/self/mountinfo\fR
+.\"
+.SH SYNOPSIS
+.\"
+.B rvmtab
+.\"
+.SH DESCRIPTION
+.B rvmtab
+will list out the content of
+.I /proc/mounts
+sorted first of all in the reverse order of the parent IDs found in
+.I /proc/self/mountinfo
+and then in a second sub sort in the reverse order of mount IDs
+also found in
+.IR /proc/self/mountinfo .
+.\"
+.SH OPTIONS
+Currently
+.B rvmtab
+does not know about any option.
+.\"
+.SH EXAMPLES
+.nf
+.B rvmtab
+.fi
+.\"
+.SH RETURN VALUE
+Beside permsissions and and alloc errors
+.B rvmtab
+always returns success.
+.\"
+.SH FILES
+.TP
+.I /proc/
+path to the proc file system
+.RB (see " proc" (5)).
+.TP
+.I /proc/mounts
+this file contains of a list of all the file systems currently mounted.
+.TP
+.I /proc/self/mountinfo
+this file contains information about mount points like the unique mount ID.
+.\"
+.SH SEE ALSO
+.BR proc (5),
+.\"
+.SH COPYRIGHT
+2011 Werner Fink,
+2011 SUSE LINUX Products GmbH, Germany.
+.SH AUTHOR
+Werner Fink <werner@suse.de>

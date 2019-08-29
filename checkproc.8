@@ -1,0 +1,372 @@
+.\"
+.\" Copyright 1994-2000 Werner Fink, 1996-2000 SuSE GmbH Nuernberg, Germany.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.TH CHECKPROC 8 "Nov 10, 2000" "Version 1.16" "The SuSE boot concept"
+.UC 8
+.SH NAME
+Checkproc \- Checks for a process by full path name
+.br
+Pidofproc \- Checks for a process by exec base name
+.SH SYNOPSIS
+.\"
+.HP
+.B checkproc
+.RB [ \-vLkNz ]
+.RB [ \-x ]
+.RB [ \-p\ \fIpid_file\fP ]
+.RB [ \-i\ \fIingnore_file\fP ]
+.RB [ \-c\ \fIroot\fP ]
+.I /full/path/to/executable
+.HP
+.B checkproc
+.B \-n
+.RB [ \-vk ]
+.I name_of_kernel_thread
+.HP
+.B checkproc
+.B \ \ 
+.RB [ \-vk ]
+.RB [ \-x ]
+.I basename_of_executable
+.HP
+.B pidofproc
+.RB [ \-LkNz ]
+.RB [ \-x ]
+.RB [ \-p\ \fIpid_file\fP ]
+.RB [ \-i\ \fIingnore_file\fP ]
+.RB [ \-c\ \fIroot\fP ]
+.I /full/path/to/executable
+.HP
+.B pidofproc
+.B \-n
+.RB [ \-k ]
+.I name_of_kernel_thread
+.HP
+.B pidofproc
+.B \ \ 
+.RB [ \-k ]
+.RB [ \-x ]
+.I basename_of_executable
+.SH SYNOPSIS LSB 3.1
+.HP
+.B pidofproc
+.RB [ \-p\ \fIpid_file\fP ]
+.I /full/path/to/executable
+.\"
+.SH DESCRIPTION
+.B checkproc
+checks for running processes that use the specified executable.
+.PP
+.B checkproc
+does not use the pid to verify a process but the full
+path of the corresponding program which is used to identify
+the executable
+.RB (see " proc" (5)).
+Only if the inode number
+.RB (/proc/ <pid> /exe)
+and the full name are unavailable
+.RB (/proc/ <pid> /cmdline)
+or if the executable changes its zeroth argument,
+.B checkproc
+uses the base name
+.RB (/proc/ <pid> /stat)
+to identify the running program. Note that if the option
+.B \-n
+for kernel thread is given only
+.RB (/proc/ <pid> /stat)
+is used.  For this case a existing symbolic link
+.RB (/proc/ <pid> /exe)
+indicates that the
+.B <pid>
+is not a kernel thread.
+.PP
+Extended functionality is provided by the
+.B \-p
+.I pid_file
+option (former option
+.B \-f
+changed due to the LSB specification).
+If this option is specified,
+.B checkproc
+tries to check the pid read from this file
+instead of the default
+.RB (/var/run/ <basename> .pid).
+The pid read from this file is compared against the pids of
+the processes that uses the specified binary.
+If the option
+.B \-k
+is specified,
+.B checkproc
+works like
+.B killproc
+that is that if the if the
+.IR pid_file
+does not exist,
+.B checkproc
+assumes that the daemon is not running. It is possible
+to use a process identity number instead of a pid file.
+.PP
+For the possibility of having two different sessions of one binary
+program, the option
+.B \-i
+.IR ignore_file
+allows to specify a pid file which pid number is used to
+.B ignore
+all processes of corresponding process
+.BR session .
+.PP
+Note that the behaviour above is changed by the option
+.BR \-k .
+With this option, the pid read from the pid file is
+the only used pid (see
+.BR killproc (8))
+.B and
+with this option also exit codes like
+.BR startproc (8)
+or
+.BR killproc (8)
+are used.
+Without this option, the pid read from the pid file is used to search
+the process table for a process with an executable that matches the
+specified pathname. In order to avoid confusion with stale pid files,
+a not up-to-date pid will be ignored (see
+.BR startproc (8)).
+.PP
+The option
+.B \-v
+makes
+.B checkproc
+print out verbose messages.
+The same happens if
+.B pidofproc
+LSB variant is used.  This version also accepts also the base name
+only of a executable.  Note that this disables the comparision of
+the inodes of the executable and the information found within the
+proc table
+.RB (see " proc" (5)).
+.PP
+.\"
+.SH REQUIRED
+.TP
+.IR /full/path/to/executable " or " name_of_kernel_thread
+Specifies the executable which processes should be found,
+or alternatively, if the option
+Or alternated, if option
+.B \-n
+is used, the name of the kernel thread.
+This argument is always required.
+.\"
+.SH OPTIONS
+.TP
+.B \-k
+This option makes
+.B checkproc
+work like
+.BR killproc (8)
+which changes the operation mode, e.g. the exit status of the
+program will be that of
+.BR killproc (8).
+Without this option,
+.B checkproc
+works like
+.B startproc (8)
+and finds all processes with an executable that matches the specified
+pathname, even if a given pid file (see option
+.BR \-p )
+isn't up-to-date. Nevertheless it uses its own exit status
+(see section
+.BR "EXIT CODES" ).
+.TP
+.B \-L
+This option causes symlinks to be followed, as the
+like-named option in
+.BR ls (1).
+.BR Note : 
+for the file name the original name of the program is used
+instead of the name of the symbolic link.
+.TP
+.BI \-p " pid_file"
+Former option
+.B \-f
+changed due to the LSB specification.)
+Use an alternate pid file instead of the default
+.BR /var/run/<basename>.pid .
+If the option
+.B \-k
+is specified and the
+.I pid_file
+does not exist,
+.B checkproc
+assumes that the daemon is not running.  It is possible to
+use a process identity number instead of a pid file.
+.TP
+.BI \-i " ignore_file"
+The pid found in this file is used as
+.B session
+id of the same binary program which should be ignored by
+.BR checkproc .
+.TP
+.BI \-c " root"
+Change root directory to
+.I root
+for services which have been started with this option by
+.BR startproc (8).
+.TP
+.B \-n
+This option indicates that a kernel thread should be checked.
+In this case not the executable with its full path name is required
+but the name of the kernel thread.
+.TP
+.B \-N
+With this option
+the location of the executable is checked about NFS
+file system and if true the
+.BR stat (2)
+system call is not applied on the
+.B exe
+symbolic link under
+.BR /proc (5).
+Otherwise
+.B checkproc
+or
+.B pidofproc
+could be locked if the corresponding NFS server
+is currently not online or available.
+This implies that the inode number check between the exectuable
+on the command line and the exectuable of the
+.B exec
+symbolic link will be skipped.
+.TP
+.B \-q
+This option is ignored.
+.TP
+.B \-v
+Verbose output.
+.TP
+.B \-z
+This option causes checkproc to see processes even if they
+are in the zombie state.  Without this option zombies are
+handled as not existent because such a process isn't
+alive but listed in the process table and waits on its
+parent process.
+.TP
+.B \-x
+Tells
+.B checkproc
+as well as
+.B pidofproc
+to use the upto 15 byte long filename name found in
+.I /proc/<pid>/stat
+to be able to identify scripts overwriting their command line.
+.PP
+.\"
+.SH EXAMPLE
+.TP
+.B checkproc /usr/sbin/sendmail
+.IP
+returns all pids of running sendmail processes.
+.TP
+.B checkproc -p /var/myrun/lpd.pid /usr/sbin/lpd
+.IP
+returns the command line or the basename of the process pid
+found in
+.IR /var/run/lpd.pid .
+.\"
+.SH EXIT CODES
+The exit codes without the option
+.B \-k
+have the following
+.B LSB
+conform conditions:
+.PP
+.RS 7
+.IP 0 5
+Program is running
+.IP 1 5
+No process but pid file found
+.IP 3 5
+No process and no pid file found
+.IP 4 5
+Program is not installed
+.RE
+.RS 5
+.IP 101 7
+Wrong syntax on command line
+.IP 102 7
+Other errors
+.RE
+.PP
+If the option
+.B \-k
+is used checkproc uses exit codes like
+.BR startproc (8)
+or
+.BR killproc  (8)
+do:
+.PP
+.RS 7
+.IP 0 5
+Program is running
+.IP 1 5
+Generic or unspecified error
+.IP 2 5
+Invalid or excess argument(s)
+.IP 4 5
+Insufficient privilege(s)
+.IP 5 5
+Program is not installed
+.IP 7 5
+Program is not running
+.RE
+.PP
+in some cases a message is send to standard error or,
+if no standard error available,
+.BR syslogd "(8) is used."
+.SH NOTE
+.B checkproc
+together with the option
+.B \-v
+just like
+.BR pidof (8).
+The only difference is the usage of an available pid file.
+Only if no usable pid is given with a pid file the process
+table will be scanned.
+.SH BUGS
+Identifying a process based on the executable file and the corresponding
+inode number only works if the process stays alive during startproc's
+execution. Processes rewriting their zeroth argument or shell scripts (the
+inode number of the shell executable file is not identical to that of
+the script file) may not be identified by a filename path.
+.\"
+.SH FILES
+.TP
+.I /proc/
+path to the proc file system
+.RB (see " proc" (5)).
+.TP
+.I /etc/init.d/
+path to the SuSE boot concept script base directory
+as required by the Linux Standard  Base  Specification (LSB)
+.RB (see " init.d" (7)).
+.\"
+.SH SEE ALSO
+.BR startproc (8),
+.BR killproc (8),
+.BR insserv (8),
+.BR init.d (7),
+.BR kill (1),
+.BR skill (1),
+.BR killall (8),
+.BR killall5 (8),
+.BR signal (7),
+.BR proc (5).
+.SH COPYRIGHT
+1994-2005 Werner Fink,
+1996-2005 SuSE GmbH Nuernberg, Germany.
+.SH AUTHOR
+Werner Fink <werner@suse.de>

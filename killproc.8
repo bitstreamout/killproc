@@ -1,0 +1,389 @@
+.\"
+.\" Copyright 1994-2000 Werner Fink, 1996-2000 SuSE GmbH Nuernberg, Germany.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.TH KILLPROC 8 "Nov 10, 2000" "Version 1.16" "The SuSE boot concept"
+.UC 8
+.SH NAME
+Killproc \- Send signals to processes by full path name
+.SH SYNOPSIS
+.\"
+.HP
+.B killproc
+.RB [ \-vqLN ]
+.RB [ \-g | -G ]
+.RB [ \-x ]
+.RB [ \-p\ \fIpid_file\fP ]
+.RB [ \-i\ \fIingnore_file\fP ]
+.RB [ \-c\ \fIroot\fP ]
+.RB [ \-t\ \fI<sec>\fP ]
+.RB [ \-\fI<SIG>\fP ]
+.I /full/path/to/executable
+.HP
+.B killproc
+.B \-n
+.RB [ \-vq ]
+.RB [ \-g | -G ]
+.RB [ \-t\ \fI<sec>\fP ]
+.RB [ \-\fI<SIG>\fP ]
+.I name_of_kernel_thread
+.HP
+.B killproc
+.B \ \ 
+.RB [ \-vq ]
+.RB [ \-g | -G ]
+.RB [ \-t\ \fI<sec>\fP ]
+.RB [ \-\fI<SIG>\fP ]
+.I basename_of_executable
+.HP
+.B killproc
+.B \-l
+.SH SYNOPSIS LSB 3\.1
+.HP
+.B killproc
+.RB [ \-p\ \fIpid_file\fP ]
+.I /full/path/to/executable
+.RB [ \-\fI<SIG>\fP ]
+.\"
+.SH DESCRIPTION
+.B killproc
+sends signals to all processes that use the specified executable.
+If no signal name is specified, the signal
+.B SIGTERM
+is sent. If this program is not called with the name
+.B killproc
+then
+.B SIGHUP
+is used. Note that if no signal is specified on the command line and the program
+.B killproc
+can not terminate a process with the default
+.B SIGTERM
+the signal
+.B SIGKILL
+is send after a few seconds (default is 5 seconds, see option
+.BR \-t ).
+If a program has been terminated successfully and a
+.B verified
+pid file was found, this pid file will be removed if the terminated
+process didn't already do so.
+.PP
+.B killproc
+does not use the pid to send a signal to a process but the full
+path of the corresponding program which is used to identify the executable
+.RB (see " proc" (5)).
+Only if inode number
+.RB (/proc/ <pid> /exe)
+and full path name of the executable
+.RB (/proc/ <pid> /cmdline)
+are unavailable or if the executable has changed its zeroth argument,
+.B killproc
+uses the base name
+.RB (/proc/ <pid> /stat)
+to identify the running program. Note that if the option
+.B \-n
+for kernel thread is given, only
+.RB (/proc/ <pid> /stat)
+is used.  For this case an existing symbolic link
+.RB (/proc/ <pid> /exe)
+indicates that the
+.B <pid>
+is not a kernel thread.
+.PP
+The last variant of the
+.B killproc
+call is only with the basename
+of the executable.  This is required by the Linux Standard Base Specification (LSB).
+Note that this disables the comparision of the inodes of the
+executable and the information found within the proc table
+.RB (see " proc" (5)).
+This implies that if no pid file is found it may happens that
+programs or script with the same base name will killed instead.
+.B killproc
+tries to determine the pid of its parent and pid of the parent of its parent
+to not to kill those two processes.
+.PP
+Extended functionality is provided by the
+.B \-p
+.IR pid_file
+option (former option
+.B \-f
+changed due to the LSB specification).
+If this option is specified,
+.B killproc
+tries to send the signal to the pid read from this file instead
+of from the default pid file
+.RB (/var/run/ <basename> .pid).
+If the
+.IR pid_file
+does not exist,
+.B killproc
+assumes that the daemon is not running.
+It is possible to use a process identity number instead
+of a pid file.
+.PP
+For the possibility of having two different sessions of one binary
+program, the option
+.B \-i
+.IR ignore_file
+allows to specify a pid file which pid number is used to
+.B ignore
+all processes of corresponding process
+.BR session .
+.PP
+The option
+.B \-v
+turns on verbosity about which signal is being sent.
+The option
+.B \-q
+is
+.B ignored
+for compatibility with older versions.
+If the option
+.B \-G
+is used, the signal will not only sent to the running executable,
+but also to all members of the session that the specified executable
+leads. Whereas the option
+.B \-g
+the signal sends to the group including the executable.
+If unsure use
+.BR \-G .
+.PP
+.\"
+.SH REQUIRED
+.TP
+.IR /full/path/to/executable " or " name_of_kernel_thread
+Specifies the executable to which the signal should be sent,
+or alternatively, if the option
+.B \-n
+is used, the name of the kernel thread. This argument is
+always required.
+.\"
+.SH OPTIONS
+.TP
+.B \-G
+Sends the signal to all session followers (children) of the identified
+process.
+.TP
+.B \-g
+Sends the signal to all members of the session including the
+identified process.
+Note that usually the option
+.B \-G
+should be used.
+.TP
+.B \-L
+This option causes symlinks to be followed, as the
+like-named option in
+.BR ls (1).
+.BR Note : 
+for the file name the original name of the program is used
+instead of the name of the symbolic link.
+.TP
+.BI \-p " pid_file"
+(Former option
+.B \-f
+changed due to the LSB specification.)
+Use an alternate pid file instead of the default
+.RB (/var/run/ <basename> .pid).
+If the
+.IR pid_file
+does not exist,
+.B killproc
+assumes that the daemon is not running.
+It is possible to use a process identity number instead
+of a pid file.
+.TP
+.BI \-i " ignore_file"
+The pid found in this file is used as
+.B session
+id of the same binary program which should be ignored by
+.BR killproc .
+.TP
+.BI \-c " root"
+Change root directory to
+.I root
+for services which have been started with this option by
+.BR startproc (8).
+.TP
+.B \-n
+This option indicates that a kernel thread should be
+signaled.  In this case not the executable with its
+full path name is required but the name of the kernel
+thread.
+.TP
+.B \-N
+With this option
+the location of the executable is checked about NFS
+file system and if true the
+.BR stat (2)
+system call is not applied on the
+.B exe
+symbolic link under
+.BR /proc (5).
+Otherwise
+.B killproc
+could be locked if the corresponding NFS server
+is currently not online or available.
+This implies that the inode number check between the exectuable
+on the command line and the exectuable of the
+.B exec
+symbolic link will be skipped.
+.\"
+.TP
+.B \-\fI<SIG>\fP
+Signals  can be specified either by name
+.RB (e.g. " -HUP" , " -SIGHUP" )
+or by number
+.RB (e.g. " -1" ).
+.TP
+.B \-t\fI<sec>\fP
+The number
+.I <sec>
+specifies the seconds to wait between the default signal
+.B SIGTERM
+and the subsequentially signal
+.B SIGKILL
+if the first
+.B SIGTERM
+does not show any result within the
+first few milli seconds.  This timeout defaults to
+.B 5
+seconds.  On the other hand if the signal
+.B SIGTERM
+was  explicitly used on the command line, the signal
+.B SIGKILL
+will be omitted, even if the process was not terminated
+after the timeout has expired.
+.TP
+.B \-q
+This option is ignored.
+.TP
+.B \-v
+Be more verbose.
+.\"
+.TP
+.B \-l
+This option list all available signals and some of their
+synonyms by their number and signal names to standard out.
+and exits.
+.TP
+.B \-x
+Tells
+.B killproc
+to use the upto 15 byte long filename name found in
+.I /proc/<pid>/stat
+to be able to identify scripts overwriting their command line.
+.\"
+.SH EXAMPLES
+.TP
+.B killproc -TERM /usr/sbin/sendmail
+.IP
+sends the signal
+.B SIGTERM
+to the running sendmail process. If a
+pid file
+.I sendmail.pid
+exists in
+.I /var/run/
+then the pid from this file is being used after verification to
+terminate the sendmail process.  Other running processes are
+ignored.
+.TP
+.B killproc -p /var/myrun/lpd.pid /usr/sbin/lpd
+.IP
+sends the signal
+.B SIGTERM
+to the pid found in
+.I /var/myrun/lpd.pid
+if and only if this pid belongs to
+.IR /usr/sbin/lpd .
+If the named
+.I /var/myrun/lpd.pid
+does not exist,
+.B killproc
+assumes that the daemon of
+.B /usr/sbin/lpd
+is not running.  The exit status
+is set to 0 for successfully delivering the default signals
+.BR SIGTERM " and " SIGKILL
+otherwise to 7 if the program was not running.  It is also
+successful if
+.B no
+signal was specified and
+.B no program
+was there for Termination because it is already terminated.
+.\"
+.SH EXIT CODES
+The exit codes have the following
+.B LSB
+conform conditions:
+.PP
+.RS 7
+.IP 0 5
+Success or program was not running (no signal specified)
+.IP 1 5
+Generic or unspecified error
+.IP 2 5
+Invalid or excess argument(s)
+.IP 4 5
+Insufficient privilege(s)
+.IP 5 5
+Program is not installed
+.IP 7 5
+Program was not running to receive the specified signal
+.RE
+.PP
+In some error cases, diagnostic output is sent to standard error, or,
+if standard error is not available,
+.BR syslogd "(8) is being used."
+.SH NOTE
+.B killproc
+is a replacment for the Bourne shell function
+.B killproc
+found in the widely used SysVinit package of
+Miquel van Smoorenburg, <miquels@cistron.nl>.
+.\"
+.SH BUGS
+Identifying a process based on the executable file and the
+corresponding inode number only works if the process stays alive
+during killproc's execution. Impure executables like shell scripts
+(the inode number of the shell is not identical to that of the script)
+and programs rewriting their zeroth argument may not be identified by
+a file name.
+.PP
+.B Killproc
+isn't able to signal processes being in the zombie state. Zombies are
+processes which  arn't alive but listed in the process table to have
+the exit status ready for the corresponding parent processes.
+.\"
+.SH FILES
+.TP
+.I /proc/
+path to the proc file system
+.RB (see " proc" (5)).
+.TP
+.I /etc/init.d/
+path to the SuSE boot concept script base directory
+as required by the Linux Standard  Base  Specification (LSB)
+.RB (see " init.d" (7)).
+.\"
+.SH SEE ALSO
+.BR startproc (8),
+.BR checkproc (8),
+.BR insserv (8),
+.BR init.d (7),
+.BR kill (1),
+.BR skill (1),
+.BR killall (8),
+.BR killall5 (8),
+.BR signal (7),
+.BR proc (5).
+.SH COPYRIGHT
+1994-2005 Werner Fink,
+1996-2005 SuSE GmbH Nuernberg, Germany.
+.SH AUTHOR
+Werner Fink <werner@suse.de>
