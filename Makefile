@@ -15,7 +15,7 @@ DESTDIR	 =
 VERSION	 =	2.23
 DATE	 =	$(shell date +'%d%b%y' | tr '[:lower:]' '[:upper:]')
 STATX	 =	$(shell (test -d /lib64 && nm -D /lib64/libc.so.* || /lib/libc.so.*)|grep -c statx)
-SYSSTATX =      $(shell echo -e '\#include <sys/syscall.h>\nint main () {return SYS_statx;}'|gcc -x c -o /dev/null -P - 2>/dev/null && echo 1 || echo 0)
+SYSSTATX =      $(shell echo -e '#include <sys/syscall.h>\nint main () {return SYS_statx;}'|gcc -x c -o /dev/null -P - 2>/dev/null && echo 1 || echo 0)
 OSTATX   =
 
   LIBS  +=	-lblogger -lpthread
